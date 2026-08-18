@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Presidential Sketcher</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#home" aria-label="Presidential Sketcher home">
+        <span class="brand-mark" aria-hidden="true">PS</span>
+        <span>Presidential Sketcher</span>
+      </a>
+
+      <nav class="tabs" aria-label="Main pages">
+        <button class="tab is-active" type="button" data-tab="home" aria-selected="true">
+          Home
+        </button>
+        <button class="tab" type="button" data-tab="draw" aria-selected="false">
+          Draw
+        </button>
+      </nav>
+    </header>
+
+    <main>
+      <section class="page is-active" id="home" aria-labelledby="home-title">
+        <div class="home-grid">
+          <div class="intro-panel">
+            <h1 id="home-title">Presidential Sketcher</h1>
+            <div class="action-row">
+              <button class="primary-action" type="button" data-tab-link="draw">
+                Open Draw
+              </button>
+              <button class="lucky-action" type="button" id="lucky-button">
+                <span class="lucky-name">I'm Feeling Lucky</span>
+                <span class="lucky-number">random president</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="home-sample" aria-label="Looping George Washington sketch sample">
+            <canvas class="sketch-canvas sample-canvas" id="home-canvas" width="920" height="920"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="draw" aria-labelledby="draw-title">
+        <div class="draw-shell">
+          <div class="draw-header">
+            <p class="eyebrow">Sketch simulation</p>
+            <h1 id="draw-title">Draw</h1>
+            <p>
+              Choose a president to preview the portrait sketch simulation.
+            </p>
+          </div>
+
+          <div class="studio-layout">
+            <section class="president-grid" aria-label="President choices">
+              <button class="president-card is-selected" type="button" data-president="George Washington - 1st president" aria-pressed="true">
+                <span class="president-name">George Washington</span>
+                <span class="president-number">1st president</span>
+              </button>
+              <button class="president-card" type="button" data-president="John Adams - 2nd president" aria-pressed="false">
+                <span class="president-name">John Adams</span>
+                <span class="president-number">2nd president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Thomas Jefferson - 3rd president" aria-pressed="false">
+                <span class="president-name">Thomas Jefferson</span>
+                <span class="president-number">3rd president</span>
+              </button>
+              <button class="president-card" type="button" data-president="James Madison - 4th president" aria-pressed="false">
+                <span class="president-name">James Madison</span>
+                <span class="president-number">4th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="James Monroe - 5th president" aria-pressed="false">
+                <span class="president-name">James Monroe</span>
+                <span class="president-number">5th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="John Quincy Adams - 6th president" aria-pressed="false">
+                <span class="president-name">John Quincy Adams</span>
+                <span class="president-number">6th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Andrew Jackson - 7th president" aria-pressed="false">
+                <span class="president-name">Andrew Jackson</span>
+                <span class="president-number">7th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Martin Van Buren - 8th president" aria-pressed="false">
+                <span class="president-name">Martin Van Buren</span>
+                <span class="president-number">8th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="William Henry Harrison - 9th president" aria-pressed="false">
+                <span class="president-name">William Henry Harrison</span>
+                <span class="president-number">9th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="John Tyler - 10th president" aria-pressed="false">
+                <span class="president-name">John Tyler</span>
+                <span class="president-number">10th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="James K. Polk - 11th president" aria-pressed="false">
+                <span class="president-name">James K. Polk</span>
+                <span class="president-number">11th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Zachary Taylor - 12th president" aria-pressed="false">
+                <span class="president-name">Zachary Taylor</span>
+                <span class="president-number">12th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Millard Fillmore - 13th president" aria-pressed="false">
+                <span class="president-name">Millard Fillmore</span>
+                <span class="president-number">13th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Franklin Pierce - 14th president" aria-pressed="false">
+                <span class="president-name">Franklin Pierce</span>
+                <span class="president-number">14th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="James Buchanan - 15th president" aria-pressed="false">
+                <span class="president-name">James Buchanan</span>
+                <span class="president-number">15th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Abraham Lincoln - 16th president" aria-pressed="false">
+                <span class="president-name">Abraham Lincoln</span>
+                <span class="president-number">16th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Andrew Johnson - 17th president" aria-pressed="false">
+                <span class="president-name">Andrew Johnson</span>
+                <span class="president-number">17th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Ulysses S. Grant - 18th president" aria-pressed="false">
+                <span class="president-name">Ulysses S. Grant</span>
+                <span class="president-number">18th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Rutherford B. Hayes - 19th president" aria-pressed="false">
+                <span class="president-name">Rutherford B. Hayes</span>
+                <span class="president-number">19th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="James A. Garfield - 20th president" aria-pressed="false">
+                <span class="president-name">James A. Garfield</span>
+                <span class="president-number">20th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Chester A. Arthur - 21st president" aria-pressed="false">
+                <span class="president-name">Chester A. Arthur</span>
+                <span class="president-number">21st president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Grover Cleveland - 22nd and 24th president" aria-pressed="false">
+                <span class="president-name">Grover Cleveland</span>
+                <span class="president-number">22nd and 24th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Benjamin Harrison - 23rd president" aria-pressed="false">
+                <span class="president-name">Benjamin Harrison</span>
+                <span class="president-number">23rd president</span>
+              </button>
+              <button class="president-card" type="button" data-president="William McKinley - 25th president" aria-pressed="false">
+                <span class="president-name">William McKinley</span>
+                <span class="president-number">25th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Theodore Roosevelt - 26th president" aria-pressed="false">
+                <span class="president-name">Theodore Roosevelt</span>
+                <span class="president-number">26th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="William Howard Taft - 27th president" aria-pressed="false">
+                <span class="president-name">William Howard Taft</span>
+                <span class="president-number">27th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Woodrow Wilson - 28th president" aria-pressed="false">
+                <span class="president-name">Woodrow Wilson</span>
+                <span class="president-number">28th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Warren G. Harding - 29th president" aria-pressed="false">
+                <span class="president-name">Warren G. Harding</span>
+                <span class="president-number">29th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Calvin Coolidge - 30th president" aria-pressed="false">
+                <span class="president-name">Calvin Coolidge</span>
+                <span class="president-number">30th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Herbert Hoover - 31st president" aria-pressed="false">
+                <span class="president-name">Herbert Hoover</span>
+                <span class="president-number">31st president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Franklin D. Roosevelt - 32nd president" aria-pressed="false">
+                <span class="president-name">Franklin D. Roosevelt</span>
+                <span class="president-number">32nd president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Harry S. Truman - 33rd president" aria-pressed="false">
+                <span class="president-name">Harry S. Truman</span>
+                <span class="president-number">33rd president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Dwight D. Eisenhower - 34th president" aria-pressed="false">
+                <span class="president-name">Dwight D. Eisenhower</span>
+                <span class="president-number">34th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="John F. Kennedy - 35th president" aria-pressed="false">
+                <span class="president-name">John F. Kennedy</span>
+                <span class="president-number">35th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Lyndon B. Johnson - 36th president" aria-pressed="false">
+                <span class="president-name">Lyndon B. Johnson</span>
+                <span class="president-number">36th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Richard Nixon - 37th president" aria-pressed="false">
+                <span class="president-name">Richard Nixon</span>
+                <span class="president-number">37th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Gerald Ford - 38th president" aria-pressed="false">
+                <span class="president-name">Gerald Ford</span>
+                <span class="president-number">38th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Jimmy Carter - 39th president" aria-pressed="false">
+                <span class="president-name">Jimmy Carter</span>
+                <span class="president-number">39th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Ronald Reagan - 40th president" aria-pressed="false">
+                <span class="president-name">Ronald Reagan</span>
+                <span class="president-number">40th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="George H. W. Bush - 41st president" aria-pressed="false">
+                <span class="president-name">George H. W. Bush</span>
+                <span class="president-number">41st president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Bill Clinton - 42nd president" aria-pressed="false">
+                <span class="president-name">Bill Clinton</span>
+                <span class="president-number">42nd president</span>
+              </button>
+              <button class="president-card" type="button" data-president="George W. Bush - 43rd president" aria-pressed="false">
+                <span class="president-name">George W. Bush</span>
+                <span class="president-number">43rd president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Barack Obama - 44th president" aria-pressed="false">
+                <span class="president-name">Barack Obama</span>
+                <span class="president-number">44th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Donald Trump - 45th and 47th president" aria-pressed="false">
+                <span class="president-name">Donald Trump</span>
+                <span class="president-number">45th and 47th president</span>
+              </button>
+              <button class="president-card" type="button" data-president="Joe Biden - 46th president" aria-pressed="false">
+                <span class="president-name">Joe Biden</span>
+                <span class="president-number">46th president</span>
+              </button>
+            </section>
+
+            <div class="studio-board" aria-label="Sketch simulation canvas">
+              <div class="paper">
+                <canvas class="sketch-canvas" id="draw-canvas" width="920" height="920"></canvas>
+                <p>
+                  <span class="selected-president">George Washington - 1st president</span>
+                  <span class="drawing-status">Select a president to start the sketch simulation</span>
+                </p>
+                <button class="sketch-control is-hidden" type="button" id="draw-toggle" aria-hidden="true">
+                  Pause
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
