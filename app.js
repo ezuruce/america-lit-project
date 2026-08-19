@@ -46,24 +46,44 @@ const PRESIDENTS = [
   { id: "44", name: "Joe Biden", number: "46th president", wiki: "https://en.wikipedia.org/wiki/Joe_Biden" },
 ];
 
+const WASHINGTON_COLORS = {
+  face: "#c98667",
+  hair: "#ece0cf",
+  clothes: "#273146",
+  shirt: "#eee8df",
+  background: "#e8dcc8",
+};
+
 const tabButtons = Array.from(document.querySelectorAll("[data-tab]"));
 const pages = Array.from(document.querySelectorAll(".page"));
 const presidentCards = Array.from(document.querySelectorAll(".president-card"));
 const selectedPresident = document.querySelector(".selected-president");
 const drawingStatus = document.querySelector(".drawing-status");
-const drawToggle = document.querySelector("#draw-toggle");
 const drawCanvas = document.querySelector("#draw-canvas");
 const homeCanvas = document.querySelector("#home-canvas");
 const luckyButton = document.querySelector("#lucky-button");
 const luckyName = luckyButton?.querySelector(".lucky-name");
 const luckyNumber = luckyButton?.querySelector(".lucky-number");
+const colorPicker = document.querySelector("#color-picker");
+const saturationPicker = document.querySelector("#saturation-picker");
+const brightnessPicker = document.querySelector("#brightness-picker");
+const brushSizeInput = document.querySelector("#brush-size");
+const colorPreview = document.querySelector("#color-preview");
+const colorValue = document.querySelector("#color-value");
+const clearColorsButton = document.querySelector("#clear-colors");
+const resetOutlineButton = document.querySelector("#reset-outline");
+const swatches = Array.from(document.querySelectorAll(".swatch"));
 const presidentsByLabel = new Map(PRESIDENTS.map((president) => [`${president.name} - ${president.number}`, president]));
 
 let strokeLibrary = {};
-let drawAnimator;
-let homeAnimator;
+let coloringPage;
+let homeColoring;
 let luckyTimer;
-let pendingPresident;
+let pendingPresident = PRESIDENTS[0];
+let currentColor = "#111111";
+let currentHue = 0;
+let currentSaturation = 0;
+let currentLightness = 7;
 
 function tabFromHash() {
   const tabName = window.location.hash.replace("#", "");
@@ -84,6 +104,8 @@ function activateTab(tabName) {
   if (window.location.hash !== `#${tabName}`) {
     window.history.replaceState(null, "", `#${tabName}`);
   }
+
+  window.scrollTo({ top: 0, behavior: "auto" });
 }
 
 function setupCards() {
@@ -98,7 +120,7 @@ function setupCards() {
   }
 }
 
-function selectPresident(president, shouldDraw) {
+function selectPresident(president, shouldOpenTab) {
   for (const item of presidentCards) {
     const isSelected = item.dataset.id === president.id;
     item.classList.toggle("is-selected", isSelected);
@@ -109,19 +131,11 @@ function selectPresident(president, shouldDraw) {
     selectedPresident.textContent = `${president.name} - ${president.number}`;
   }
 
-  if (shouldDraw) {
+  if (shouldOpenTab) {
     activateTab("draw");
-    startDrawing(president);
-  }
-}
-
-function setDrawControlVisible(isVisible) {
-  if (!drawToggle) {
-    return;
   }
 
-  drawToggle.classList.toggle("is-hidden", !isVisible);
-  drawToggle.setAttribute("aria-hidden", String(!isVisible));
+  showColoringPage(president);
 }
 
 function setDrawStatus(text) {
@@ -130,91 +144,116 @@ function setDrawStatus(text) {
   }
 }
 
-function startDrawing(president) {
+function showColoringPage(president) {
   const strokes = strokeLibrary[president.id];
-  if (!drawAnimator || !strokes) {
+  if (!coloringPage || !strokes) {
     pendingPresident = president;
-    setDrawControlVisible(false);
-    setDrawStatus("Loading sketch paths");
+    setDrawStatus("Loading coloring page");
     return;
   }
 
   pendingPresident = undefined;
-  drawAnimator.start(strokes, {
-    duration: drawingDuration(strokes),
-    loop: false,
-    onStatus: (status) => {
-      if (status === "drawing") {
-        setDrawStatus("Drawing in progress");
-        setDrawControlVisible(true);
-        drawToggle.textContent = "Pause";
-      } else if (status === "paused") {
-        setDrawStatus("Drawing paused");
-        setDrawControlVisible(true);
-        drawToggle.textContent = "Resume";
-      } else if (status === "complete") {
-        setDrawStatus("Sketch complete");
-        setDrawControlVisible(false);
-      }
-    },
-  });
+  coloringPage.setPresident(president, strokes);
+  setDrawStatus("Color with the selected brush");
 }
 
-function drawingDuration(strokes) {
-  const totalLength = strokes.reduce((sum, stroke) => sum + stroke.length, 0);
-  return 10000 + Math.min(5000, totalLength * 85);
-}
-
-function drawPolyline(ctx, points, scale, offsetX, offsetY, uptoLength = Infinity) {
-  if (points.length < 2 || uptoLength <= 0) {
-    return 0;
-  }
-
-  let consumed = 0;
-  ctx.beginPath();
-  ctx.moveTo(offsetX + points[0][0] * scale, offsetY + points[0][1] * scale);
-
-  for (let index = 1; index < points.length; index += 1) {
-    const prev = points[index - 1];
-    const point = points[index];
-    const x1 = offsetX + prev[0] * scale;
-    const y1 = offsetY + prev[1] * scale;
-    const x2 = offsetX + point[0] * scale;
-    const y2 = offsetY + point[1] * scale;
-    const segmentLength = Math.hypot(x2 - x1, y2 - y1) / scale;
-
-    if (consumed + segmentLength > uptoLength) {
-      const remaining = Math.max(0, uptoLength - consumed);
-      const ratio = segmentLength === 0 ? 0 : remaining / segmentLength;
-      ctx.lineTo(x1 + (x2 - x1) * ratio, y1 + (y2 - y1) * ratio);
-      ctx.stroke();
-      return consumed + remaining;
-    }
-
-    ctx.lineTo(x2, y2);
-    consumed += segmentLength;
-  }
-
-  ctx.stroke();
-  return consumed;
-}
-
-class SketchAnimator {
+class ColoringPage {
   constructor(canvas) {
     this.canvas = canvas;
     this.ctx = canvas?.getContext("2d");
+    this.paintCanvas = document.createElement("canvas");
+    this.paintCtx = this.paintCanvas.getContext("2d");
     this.strokes = [];
-    this.duration = 12000;
-    this.loop = false;
-    this.elapsedBeforePause = 0;
-    this.startedAt = 0;
-    this.frame = 0;
-    this.state = "idle";
-    this.onStatus = () => {};
-    this.tick = this.tick.bind(this);
+    this.president = PRESIDENTS[0];
+    this.isPainting = false;
+    this.lastPoint = null;
+    this.bind();
+    this.resizePaintLayer();
   }
 
-  clear() {
+  bind() {
+    if (!this.canvas) {
+      return;
+    }
+
+    this.canvas.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      this.isPainting = true;
+      this.lastPoint = this.pointFromEvent(event);
+      this.paintAt(this.lastPoint, this.lastPoint);
+      this.canvas.setPointerCapture(event.pointerId);
+    });
+
+    this.canvas.addEventListener("pointermove", (event) => {
+      if (!this.isPainting) {
+        return;
+      }
+      const nextPoint = this.pointFromEvent(event);
+      this.paintAt(this.lastPoint, nextPoint);
+      this.lastPoint = nextPoint;
+    });
+
+    for (const eventName of ["pointerup", "pointercancel", "pointerleave"]) {
+      this.canvas.addEventListener(eventName, () => {
+        this.isPainting = false;
+        this.lastPoint = null;
+      });
+    }
+  }
+
+  resizePaintLayer() {
+    if (!this.canvas) {
+      return;
+    }
+    this.paintCanvas.width = this.canvas.width;
+    this.paintCanvas.height = this.canvas.height;
+  }
+
+  setPresident(president, strokes) {
+    this.president = president;
+    this.strokes = prepareStrokes(strokes);
+    this.clearColors();
+  }
+
+  pointFromEvent(event) {
+    const rect = this.canvas.getBoundingClientRect();
+    return {
+      x: ((event.clientX - rect.left) / rect.width) * this.canvas.width,
+      y: ((event.clientY - rect.top) / rect.height) * this.canvas.height,
+    };
+  }
+
+  paintAt(from, to) {
+    if (!from || !to) {
+      return;
+    }
+
+    this.paintCtx.save();
+    this.paintCtx.strokeStyle = currentColor;
+    this.paintCtx.fillStyle = currentColor;
+    this.paintCtx.lineWidth = Number(brushSizeInput?.value || 26);
+    this.paintCtx.lineCap = "round";
+    this.paintCtx.lineJoin = "round";
+    this.paintCtx.beginPath();
+    this.paintCtx.moveTo(from.x, from.y);
+    this.paintCtx.lineTo(to.x, to.y);
+    this.paintCtx.stroke();
+    this.paintCtx.beginPath();
+    this.paintCtx.arc(to.x, to.y, this.paintCtx.lineWidth / 2, 0, Math.PI * 2);
+    this.paintCtx.fill();
+    this.paintCtx.restore();
+    this.render();
+  }
+
+  clearColors() {
+    if (!this.paintCtx || !this.canvas) {
+      return;
+    }
+    this.paintCtx.clearRect(0, 0, this.paintCanvas.width, this.paintCanvas.height);
+    this.render();
+  }
+
+  render() {
     if (!this.ctx || !this.canvas) {
       return;
     }
@@ -222,78 +261,42 @@ class SketchAnimator {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.fillStyle = "#ffffff";
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.drawImage(this.paintCanvas, 0, 0);
+    drawOutline(this.ctx, this.strokes, this.canvas, 1);
+  }
+}
+
+class HomeColoringAnimation {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas?.getContext("2d");
+    this.strokes = [];
+    this.frame = 0;
+    this.startedAt = 0;
+    this.duration = 12500;
+    this.tick = this.tick.bind(this);
   }
 
-  start(strokes, options = {}) {
+  start(strokes) {
+    if (!this.ctx || !this.canvas) {
+      return;
+    }
     cancelAnimationFrame(this.frame);
     this.strokes = prepareStrokes(strokes);
-    this.totalLength = this.strokes.reduce((sum, stroke) => sum + stroke.pixelLength, 0);
-    this.duration = options.duration ?? 12000;
-    this.loop = Boolean(options.loop);
-    this.onStatus = options.onStatus ?? (() => {});
-    this.elapsedBeforePause = 0;
     this.startedAt = performance.now();
-    this.state = "drawing";
-    this.onStatus("drawing");
-    this.clear();
     this.tick();
-  }
-
-  pause() {
-    if (this.state !== "drawing") {
-      return;
-    }
-
-    this.elapsedBeforePause += performance.now() - this.startedAt;
-    this.state = "paused";
-    cancelAnimationFrame(this.frame);
-    this.onStatus("paused");
-  }
-
-  resume() {
-    if (this.state !== "paused") {
-      return;
-    }
-
-    this.startedAt = performance.now();
-    this.state = "drawing";
-    this.onStatus("drawing");
-    this.tick();
-  }
-
-  togglePause() {
-    if (this.state === "drawing") {
-      this.pause();
-    } else if (this.state === "paused") {
-      this.resume();
-    }
   }
 
   tick() {
-    if (this.state !== "drawing") {
-      return;
-    }
-
-    const elapsed = this.elapsedBeforePause + performance.now() - this.startedAt;
-    const rawProgress = Math.min(1, elapsed / this.duration);
-    const progress = 1 - Math.pow(1 - rawProgress, 2.1);
+    const elapsed = performance.now() - this.startedAt;
+    const progress = Math.min(1, elapsed / this.duration);
     this.render(progress);
 
-    if (rawProgress >= 1) {
-      if (this.loop) {
-        this.elapsedBeforePause = 0;
-        setTimeout(() => {
-          if (this.state === "drawing") {
-            this.startedAt = performance.now();
-            this.clear();
-            this.tick();
-          }
-        }, 900);
-        return;
-      }
-
-      this.state = "complete";
-      this.onStatus("complete");
+    if (progress >= 1) {
+      setTimeout(() => {
+        this.startedAt = performance.now();
+        this.tick();
+      }, 1100);
       return;
     }
 
@@ -301,34 +304,161 @@ class SketchAnimator {
   }
 
   render(progress) {
-    if (!this.ctx || !this.canvas) {
+    const ctx = this.ctx;
+    const canvas = this.canvas;
+    if (!ctx || !canvas) {
       return;
     }
 
-    this.clear();
-    const ctx = this.ctx;
-    const canvasSize = Math.min(this.canvas.width, this.canvas.height);
-    const scale = canvasSize * 0.86;
-    const offsetX = (this.canvas.width - scale) / 2;
-    const offsetY = (this.canvas.height - scale) / 2;
-    const targetLength = this.totalLength * progress;
-    let drawnLength = 0;
-
-    ctx.strokeStyle = "#111111";
-    ctx.lineWidth = Math.max(1.55, canvasSize / 420);
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-
-    for (const stroke of this.strokes) {
-      if (drawnLength >= targetLength) {
-        break;
-      }
-
-      const remaining = targetLength - drawnLength;
-      drawPolyline(ctx, stroke.points, scale, offsetX, offsetY, remaining);
-      drawnLength += stroke.pixelLength;
-    }
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawHomeFill(ctx, canvas, progress);
+    drawOutline(ctx, this.strokes, canvas, 0.95);
   }
+}
+
+function drawHomeFill(ctx, canvas, progress) {
+  const geom = portraitGeometry(canvas);
+  const faceProgress = phaseProgress(progress, 0.00, 0.27);
+  const hairProgress = phaseProgress(progress, 0.27, 0.50);
+  const clothesProgress = phaseProgress(progress, 0.50, 0.76);
+  const backgroundProgress = phaseProgress(progress, 0.76, 1.00);
+
+  ctx.save();
+  if (backgroundProgress > 0) {
+    drawBrushFillRect(ctx, 0, 0, canvas.width, canvas.height, WASHINGTON_COLORS.background, backgroundProgress, 52);
+  }
+  ctx.globalCompositeOperation = "destination-over";
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.restore();
+
+  drawBrushFillEllipse(ctx, geom.cx, geom.cy - geom.scale * 0.05, geom.scale * 0.18, geom.scale * 0.25, WASHINGTON_COLORS.face, faceProgress, 36);
+  drawBrushFillEllipse(ctx, geom.cx - geom.scale * 0.08, geom.cy - geom.scale * 0.16, geom.scale * 0.22, geom.scale * 0.22, WASHINGTON_COLORS.hair, hairProgress, 32);
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(geom.cx - geom.scale * 0.11, geom.cy + geom.scale * 0.22);
+  ctx.lineTo(geom.cx - geom.scale * 0.40, geom.cy + geom.scale * 0.46);
+  ctx.lineTo(geom.cx + geom.scale * 0.40, geom.cy + geom.scale * 0.46);
+  ctx.lineTo(geom.cx + geom.scale * 0.11, geom.cy + geom.scale * 0.22);
+  ctx.closePath();
+  ctx.clip();
+  drawBrushFillRect(
+    ctx,
+    geom.cx - geom.scale * 0.42,
+    geom.cy + geom.scale * 0.18,
+    geom.scale * 0.84,
+    geom.scale * 0.32,
+    WASHINGTON_COLORS.clothes,
+    clothesProgress,
+    34,
+  );
+  if (clothesProgress > 0.58) {
+    drawBrushFillRect(
+      ctx,
+      geom.cx - geom.scale * 0.11,
+      geom.cy + geom.scale * 0.22,
+      geom.scale * 0.22,
+      geom.scale * 0.26,
+      WASHINGTON_COLORS.shirt,
+      Math.min(1, (clothesProgress - 0.58) / 0.42),
+      22,
+    );
+  }
+  ctx.restore();
+}
+
+function phaseProgress(progress, start, end) {
+  if (progress <= start) {
+    return 0;
+  }
+  if (progress >= end) {
+    return 1;
+  }
+  const normalized = (progress - start) / (end - start);
+  return 1 - Math.pow(1 - normalized, 2);
+}
+
+function drawBrushFillEllipse(ctx, cx, cy, rx, ry, color, progress, brushSize) {
+  if (progress <= 0) {
+    return;
+  }
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+  ctx.clip();
+  drawBrushFillRect(ctx, cx - rx, cy - ry, rx * 2, ry * 2, color, progress, brushSize);
+  ctx.restore();
+}
+
+function drawBrushFillRect(ctx, x, y, width, height, color, progress, brushSize) {
+  if (progress <= 0) {
+    return;
+  }
+
+  const rows = Math.max(1, Math.ceil(height / brushSize));
+  const visibleRows = Math.ceil(rows * progress);
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = brushSize;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  for (let row = 0; row < visibleRows; row += 1) {
+    const rowY = y + row * brushSize + brushSize * 0.52;
+    const rowProgress = Math.min(1, progress * rows - row);
+    const startX = row % 2 === 0 ? x : x + width;
+    const endX = row % 2 === 0 ? x + width * rowProgress : x + width * (1 - rowProgress);
+    ctx.beginPath();
+    ctx.moveTo(startX, rowY);
+    ctx.lineTo(endX, rowY);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawOutline(ctx, strokes, canvas, alpha) {
+  const geom = portraitGeometry(canvas);
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = "#111111";
+  ctx.lineWidth = Math.max(1.55, geom.scale / 420);
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+  for (const stroke of strokes) {
+    drawPolyline(ctx, stroke.points, geom.scale, geom.offsetX, geom.offsetY);
+  }
+
+  ctx.restore();
+}
+
+function portraitGeometry(canvas) {
+  const canvasSize = Math.min(canvas.width, canvas.height);
+  const scale = canvasSize * 0.86;
+  return {
+    scale,
+    offsetX: (canvas.width - scale) / 2,
+    offsetY: (canvas.height - scale) / 2,
+    cx: canvas.width / 2,
+    cy: canvas.height / 2,
+  };
+}
+
+function drawPolyline(ctx, points, scale, offsetX, offsetY) {
+  if (points.length < 2) {
+    return;
+  }
+
+  ctx.beginPath();
+  ctx.moveTo(offsetX + points[0][0] * scale, offsetY + points[0][1] * scale);
+
+  for (let index = 1; index < points.length; index += 1) {
+    const point = points[index];
+    ctx.lineTo(offsetX + point[0] * scale, offsetY + point[1] * scale);
+  }
+
+  ctx.stroke();
 }
 
 function prepareStrokes(strokes) {
@@ -343,23 +473,26 @@ function prepareStrokes(strokes) {
 
       return { ...stroke, pixelLength };
     })
-    .filter((stroke) => stroke.pixelLength > 0.002);
+    .filter((stroke) => stroke.pixelLength > 0.002 && !isTextureStroke(stroke));
 
   prepared.sort((a, b) => {
     const orderDelta = (a.order ?? inferredStrokeOrder(a)) - (b.order ?? inferredStrokeOrder(b));
     if (orderDelta !== 0) {
       return orderDelta;
     }
-
-    const aFace = isFaceStroke(a);
-    const bFace = isFaceStroke(b);
-    if (aFace !== bFace) {
-      return aFace ? -1 : 1;
-    }
     return a.y - b.y || a.x - b.x || b.pixelLength - a.pixelLength;
   });
 
   return prepared;
+}
+
+function isTextureStroke(stroke) {
+  const area = stroke.w * stroke.h;
+  if (stroke.region === "features") {
+    return stroke.pixelLength < 0.055 && area < 0.00035;
+  }
+
+  return stroke.pixelLength < 0.022 && area < 0.00007;
 }
 
 function inferredStrokeOrder(stroke) {
@@ -371,19 +504,13 @@ function inferredStrokeOrder(stroke) {
   if (cy < 0.34) {
     return 1;
   }
-  if (isFaceStroke(stroke)) {
+  if (((cx - 0.5) / 0.32) ** 2 + ((cy - 0.46) / 0.42) ** 2 <= 1) {
     return 2;
   }
   if (cy > 0.58) {
     return 3;
   }
   return 4;
-}
-
-function isFaceStroke(stroke) {
-  const cx = stroke.x + stroke.w / 2;
-  const cy = stroke.y + stroke.h / 2;
-  return ((cx - 0.5) / 0.32) ** 2 + ((cy - 0.46) / 0.42) ** 2 <= 1;
 }
 
 function spinLuckyButton() {
@@ -421,17 +548,122 @@ function setLuckyLabel(president) {
   luckyNumber.textContent = president.number;
 }
 
-function initializeAnimations() {
-  drawAnimator = new SketchAnimator(drawCanvas);
-  homeAnimator = new SketchAnimator(homeCanvas);
-  const georgeWashington = PRESIDENTS[0];
-  const washingtonStrokes = strokeLibrary[georgeWashington.id];
+function setCurrentColor(nextColor, updateSliders = true) {
+  currentColor = normalizeHex(nextColor);
+  if (colorPicker) {
+    colorPicker.value = currentColor;
+  }
+  if (colorPreview) {
+    colorPreview.style.background = currentColor;
+  }
+  if (colorValue) {
+    colorValue.textContent = currentColor.toUpperCase();
+  }
 
-  if (washingtonStrokes && homeAnimator) {
-    homeAnimator.start(washingtonStrokes, {
-      duration: 11000,
-      loop: true,
-    });
+  const hsl = hexToHsl(currentColor);
+  currentHue = hsl.h;
+  currentSaturation = hsl.s;
+  currentLightness = hsl.l;
+
+  if (updateSliders) {
+    if (saturationPicker) {
+      saturationPicker.value = String(Math.round(currentSaturation));
+    }
+    if (brightnessPicker) {
+      brightnessPicker.value = String(Math.round(currentLightness));
+    }
+  }
+
+  for (const swatch of swatches) {
+    swatch.classList.toggle("is-active", normalizeHex(swatch.dataset.color) === currentColor);
+  }
+}
+
+function updateColorFromSliders() {
+  currentSaturation = Number(saturationPicker?.value || currentSaturation);
+  currentLightness = Number(brightnessPicker?.value || currentLightness);
+  setCurrentColor(hslToHex(currentHue, currentSaturation, currentLightness), false);
+}
+
+function normalizeHex(value) {
+  if (!value) {
+    return "#111111";
+  }
+  const hex = value.trim().toLowerCase();
+  if (/^#[0-9a-f]{6}$/.test(hex)) {
+    return hex;
+  }
+  return "#111111";
+}
+
+function hexToHsl(hex) {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0;
+  let s = 0;
+  const l = (max + min) / 2;
+
+  if (max !== min) {
+    const delta = max - min;
+    s = l > 0.5 ? delta / (2 - max - min) : delta / (max + min);
+    if (max === r) {
+      h = (g - b) / delta + (g < b ? 6 : 0);
+    } else if (max === g) {
+      h = (b - r) / delta + 2;
+    } else {
+      h = (r - g) / delta + 4;
+    }
+    h /= 6;
+  }
+
+  return { h: h * 360, s: s * 100, l: l * 100 };
+}
+
+function hslToHex(h, s, l) {
+  const normalizedS = s / 100;
+  const normalizedL = l / 100;
+  const chroma = (1 - Math.abs(2 * normalizedL - 1)) * normalizedS;
+  const hue = h / 60;
+  const x = chroma * (1 - Math.abs((hue % 2) - 1));
+  const m = normalizedL - chroma / 2;
+  let r = 0;
+  let g = 0;
+  let b = 0;
+
+  if (0 <= hue && hue < 1) {
+    r = chroma;
+    g = x;
+  } else if (1 <= hue && hue < 2) {
+    r = x;
+    g = chroma;
+  } else if (2 <= hue && hue < 3) {
+    g = chroma;
+    b = x;
+  } else if (3 <= hue && hue < 4) {
+    g = x;
+    b = chroma;
+  } else if (4 <= hue && hue < 5) {
+    r = x;
+    b = chroma;
+  } else if (5 <= hue && hue < 6) {
+    r = chroma;
+    b = x;
+  }
+
+  return `#${[r, g, b]
+    .map((channel) => Math.round((channel + m) * 255).toString(16).padStart(2, "0"))
+    .join("")}`;
+}
+
+function initializeCanvases() {
+  coloringPage = new ColoringPage(drawCanvas);
+  homeColoring = new HomeColoringAnimation(homeCanvas);
+  const washingtonStrokes = strokeLibrary["01"];
+  if (washingtonStrokes) {
+    homeColoring.start(washingtonStrokes);
   }
 }
 
@@ -439,17 +671,13 @@ async function loadStrokes() {
   try {
     const response = await fetch("assets/president-strokes.json");
     if (!response.ok) {
-      throw new Error(`Could not load stroke data: ${response.status}`);
+      throw new Error(`Could not load coloring data: ${response.status}`);
     }
     strokeLibrary = await response.json();
-    initializeAnimations();
-    if (pendingPresident) {
-      startDrawing(pendingPresident);
-    } else {
-      setDrawStatus("Select a president to start the sketch simulation");
-    }
+    initializeCanvases();
+    showColoringPage(pendingPresident || PRESIDENTS[0]);
   } catch (error) {
-    setDrawStatus("Sketch paths could not load");
+    setDrawStatus("Coloring page data could not load");
     console.error(error);
   }
 }
@@ -462,11 +690,19 @@ for (const link of document.querySelectorAll("[data-tab-link]")) {
   link.addEventListener("click", () => activateTab(link.dataset.tabLink));
 }
 
-drawToggle?.addEventListener("click", () => drawAnimator?.togglePause());
+colorPicker?.addEventListener("input", () => setCurrentColor(colorPicker.value));
+saturationPicker?.addEventListener("input", updateColorFromSliders);
+brightnessPicker?.addEventListener("input", updateColorFromSliders);
+clearColorsButton?.addEventListener("click", () => coloringPage?.clearColors());
+resetOutlineButton?.addEventListener("click", () => coloringPage?.render());
 luckyButton?.addEventListener("click", spinLuckyButton);
 
+for (const swatch of swatches) {
+  swatch.addEventListener("click", () => setCurrentColor(swatch.dataset.color));
+}
+
 setupCards();
-setDrawControlVisible(false);
+setCurrentColor("#111111");
 loadStrokes();
 
 const startingTab = tabFromHash();

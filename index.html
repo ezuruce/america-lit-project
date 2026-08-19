@@ -3,14 +3,14 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Presidential Sketcher</title>
+    <title>Presidential Coloring Page</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <header class="site-header">
-      <a class="brand" href="#home" aria-label="Presidential Sketcher home">
-        <span class="brand-mark" aria-hidden="true">PS</span>
-        <span>Presidential Sketcher</span>
+      <a class="brand" href="#home" aria-label="Presidential Coloring Page home">
+        <span class="brand-mark" aria-hidden="true">PC</span>
+        <span>Presidential Coloring Page</span>
       </a>
 
       <nav class="tabs" aria-label="Main pages">
@@ -18,7 +18,7 @@
           Home
         </button>
         <button class="tab" type="button" data-tab="draw" aria-selected="false">
-          Draw
+          Color
         </button>
       </nav>
     </header>
@@ -27,10 +27,10 @@
       <section class="page is-active" id="home" aria-labelledby="home-title">
         <div class="home-grid">
           <div class="intro-panel">
-            <h1 id="home-title">Presidential Sketcher</h1>
+            <h1 id="home-title">Presidential Coloring Page</h1>
             <div class="action-row">
               <button class="primary-action" type="button" data-tab-link="draw">
-                Open Draw
+                Open Coloring Page
               </button>
               <button class="lucky-action" type="button" id="lucky-button">
                 <span class="lucky-name">I'm Feeling Lucky</span>
@@ -39,7 +39,7 @@
             </div>
           </div>
 
-          <div class="home-sample" aria-label="Looping George Washington sketch sample">
+          <div class="home-sample" aria-label="Looping George Washington coloring sample">
             <canvas class="sketch-canvas sample-canvas" id="home-canvas" width="920" height="920"></canvas>
           </div>
         </div>
@@ -48,15 +48,70 @@
       <section class="page" id="draw" aria-labelledby="draw-title">
         <div class="draw-shell">
           <div class="draw-header">
-            <p class="eyebrow">Sketch simulation</p>
-            <h1 id="draw-title">Draw</h1>
+            <p class="eyebrow">Coloring page</p>
+            <h1 id="draw-title">Color</h1>
             <p>
-              Choose a president to preview the portrait sketch simulation.
+              Choose a president, pick a color, and fill the coloring page.
             </p>
           </div>
 
           <div class="studio-layout">
-            <section class="president-grid" aria-label="President choices">
+            <div class="studio-board" aria-label="Coloring page canvas">
+              <div class="paper">
+                <canvas class="sketch-canvas" id="draw-canvas" width="920" height="920"></canvas>
+                <p>
+                  <span class="selected-president">George Washington - 1st president</span>
+                  <span class="drawing-status">Color with the selected brush</span>
+                </p>
+              </div>
+            </div>
+
+            <aside class="color-tools" aria-label="Color controls">
+              <div class="active-color">
+                <span class="color-preview" id="color-preview" aria-hidden="true"></span>
+                <div>
+                  <span class="tool-label">Current color</span>
+                  <strong id="color-value">#111111</strong>
+                </div>
+              </div>
+
+              <label class="tool-field">
+                <span>Color</span>
+                <input type="color" id="color-picker" value="#111111" />
+              </label>
+
+              <label class="tool-field">
+                <span>Saturation</span>
+                <input type="range" id="saturation-picker" min="0" max="100" value="0" />
+              </label>
+
+              <label class="tool-field">
+                <span>Brightness</span>
+                <input type="range" id="brightness-picker" min="0" max="95" value="7" />
+              </label>
+
+              <label class="tool-field">
+                <span>Brush size</span>
+                <input type="range" id="brush-size" min="8" max="70" value="26" />
+              </label>
+
+              <div class="swatch-grid" aria-label="Color swatches">
+                <button class="swatch is-active" type="button" data-color="#111111" style="--swatch: #111111" aria-label="Black"></button>
+                <button class="swatch" type="button" data-color="#c98562" style="--swatch: #c98562" aria-label="Skin tone"></button>
+                <button class="swatch" type="button" data-color="#f0e6d5" style="--swatch: #f0e6d5" aria-label="Powdered hair"></button>
+                <button class="swatch" type="button" data-color="#283247" style="--swatch: #283247" aria-label="Dark coat"></button>
+                <button class="swatch" type="button" data-color="#e8dcc6" style="--swatch: #e8dcc6" aria-label="Warm background"></button>
+                <button class="swatch" type="button" data-color="#7a2f2f" style="--swatch: #7a2f2f" aria-label="Red accent"></button>
+              </div>
+
+              <div class="tool-actions">
+                <button class="tool-button" type="button" id="clear-colors">Clear</button>
+                <button class="tool-button" type="button" id="reset-outline">Reset outline</button>
+              </div>
+            </aside>
+          </div>
+
+          <section class="president-grid" aria-label="President choices">
               <button class="president-card is-selected" type="button" data-president="George Washington - 1st president" aria-pressed="true">
                 <span class="president-name">George Washington</span>
                 <span class="president-number">1st president</span>
@@ -237,21 +292,7 @@
                 <span class="president-name">Joe Biden</span>
                 <span class="president-number">46th president</span>
               </button>
-            </section>
-
-            <div class="studio-board" aria-label="Sketch simulation canvas">
-              <div class="paper">
-                <canvas class="sketch-canvas" id="draw-canvas" width="920" height="920"></canvas>
-                <p>
-                  <span class="selected-president">George Washington - 1st president</span>
-                  <span class="drawing-status">Select a president to start the sketch simulation</span>
-                </p>
-                <button class="sketch-control is-hidden" type="button" id="draw-toggle" aria-hidden="true">
-                  Pause
-                </button>
-              </div>
-            </div>
-          </div>
+          </section>
         </div>
       </section>
     </main>
