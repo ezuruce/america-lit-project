@@ -169,6 +169,8 @@ class ColoringPage {
     this.ctx = canvas?.getContext("2d");
     this.paintCanvas = document.createElement("canvas");
     this.paintCtx = this.paintCanvas.getContext("2d");
+    this.outlineCanvas = document.createElement("canvas");
+    this.outlineCtx = this.outlineCanvas.getContext("2d");
     this.strokes = [];
     this.president = PRESIDENTS[0];
     this.isPainting = false;
@@ -213,11 +215,14 @@ class ColoringPage {
     }
     this.paintCanvas.width = this.canvas.width;
     this.paintCanvas.height = this.canvas.height;
+    this.outlineCanvas.width = this.canvas.width;
+    this.outlineCanvas.height = this.canvas.height;
   }
 
   setPresident(president, strokes) {
     this.president = president;
     this.strokes = prepareStrokes(strokes);
+    this.renderOutlineLayer();
     this.clearColors();
   }
 
@@ -259,6 +264,15 @@ class ColoringPage {
     this.render();
   }
 
+  renderOutlineLayer() {
+    if (!this.outlineCtx || !this.outlineCanvas) {
+      return;
+    }
+
+    this.outlineCtx.clearRect(0, 0, this.outlineCanvas.width, this.outlineCanvas.height);
+    drawOutline(this.outlineCtx, this.strokes, this.outlineCanvas, 1);
+  }
+
   render() {
     if (!this.ctx || !this.canvas) {
       return;
@@ -268,7 +282,7 @@ class ColoringPage {
     this.ctx.fillStyle = "#ffffff";
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.drawImage(this.paintCanvas, 0, 0);
-    drawOutline(this.ctx, this.strokes, this.canvas, 1);
+    this.ctx.drawImage(this.outlineCanvas, 0, 0);
   }
 }
 
