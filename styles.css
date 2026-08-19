@@ -107,8 +107,8 @@ main {
 
 #draw {
   min-height: calc(100vh - 65px);
-  padding-top: clamp(18px, 3vh, 32px);
-  padding-bottom: clamp(18px, 3vh, 32px);
+  padding-top: clamp(12px, 2vh, 24px);
+  padding-bottom: clamp(14px, 2vh, 28px);
 }
 
 .page.is-active {
@@ -125,7 +125,7 @@ main {
 }
 
 .draw-shell {
-  gap: clamp(16px, 2.5vh, 24px);
+  gap: clamp(12px, 2vh, 20px);
 }
 
 .home-grid {
@@ -161,7 +161,7 @@ h1 {
 }
 
 .draw-header h1 {
-  font-size: clamp(2.2rem, 4vw, 3.6rem);
+  font-size: clamp(2rem, 3.5vw, 3.2rem);
 }
 
 .lead,
@@ -174,8 +174,8 @@ h1 {
 }
 
 .draw-header p:not(.eyebrow) {
-  margin-top: 12px;
-  font-size: clamp(0.98rem, 1.4vw, 1.1rem);
+  margin-top: 8px;
+  font-size: clamp(0.94rem, 1.2vw, 1.02rem);
 }
 
 .action-row {
@@ -301,10 +301,10 @@ h1 {
 }
 
 .studio-layout {
-  grid-template-columns: minmax(520px, 1fr) minmax(220px, 270px);
+  grid-template-columns: minmax(420px, 1fr) minmax(190px, 250px);
   align-items: stretch;
-  gap: clamp(18px, 3vw, 34px);
-  height: clamp(500px, calc(100dvh - 255px), 680px);
+  gap: clamp(14px, 2.2vw, 26px);
+  height: clamp(360px, calc(100dvh - 225px), 560px);
 }
 
 .president-grid {
@@ -312,7 +312,7 @@ h1 {
   grid-template-columns: repeat(5, minmax(145px, 1fr));
   gap: 10px;
   align-content: start;
-  max-height: 290px;
+  max-height: clamp(130px, 24dvh, 240px);
   padding: 2px 8px 8px 2px;
   overflow-y: auto;
   scrollbar-gutter: stable;
@@ -383,12 +383,11 @@ h1 {
   position: relative;
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
-  width: auto;
-  height: min(91%, 610px);
-  max-width: 86%;
-  aspect-ratio: 3 / 4;
+  width: min(calc(100% - 28px), calc(100dvh - 260px), 520px);
+  max-width: 82%;
+  aspect-ratio: 1;
   place-items: center;
-  padding: 22px;
+  padding: clamp(12px, 2vh, 20px);
   border: 2px solid var(--ink);
   border-radius: 4px;
   background: var(--paper);
@@ -396,7 +395,9 @@ h1 {
 
 .sketch-canvas {
   display: block;
-  width: min(92%, 100%);
+  width: auto;
+  height: 100%;
+  max-width: 100%;
   max-height: 100%;
   aspect-ratio: 1;
   background: var(--paper);
@@ -405,15 +406,16 @@ h1 {
 
 .sample-canvas {
   width: 82%;
+  height: auto;
 }
 
 .paper p {
   display: grid;
-  gap: 4px;
+  gap: 3px;
   margin: 0;
-  padding-top: 10px;
+  padding-top: 7px;
   color: var(--muted);
-  font-size: 0.92rem;
+  font-size: clamp(0.78rem, 1.1vw, 0.9rem);
   font-weight: 700;
   text-align: center;
   pointer-events: none;
@@ -445,9 +447,9 @@ h1 {
 .color-tools {
   display: grid;
   align-content: start;
-  gap: 16px;
+  gap: clamp(10px, 1.6vh, 14px);
   height: 100%;
-  padding: 16px;
+  padding: clamp(12px, 1.8vh, 16px);
   overflow-y: auto;
   border: 2px solid var(--ink);
   border-radius: 8px;
@@ -459,14 +461,14 @@ h1 {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding-bottom: 14px;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--line);
 }
 
 .color-preview {
   display: block;
-  width: 54px;
-  height: 54px;
+  width: clamp(42px, 6vh, 54px);
+  height: clamp(42px, 6vh, 54px);
   border: 2px solid var(--ink);
   border-radius: 8px;
   background: #111111;
@@ -489,12 +491,12 @@ h1 {
 
 .tool-field {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .tool-field input[type="color"] {
   width: 100%;
-  height: 42px;
+  height: clamp(34px, 5vh, 42px);
   padding: 2px;
   border: 2px solid var(--ink);
   border-radius: 8px;
@@ -510,7 +512,7 @@ h1 {
 .swatch-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 9px;
+  gap: 8px;
 }
 
 .swatch {
@@ -530,11 +532,11 @@ h1 {
 
 .tool-actions {
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .tool-button {
-  min-height: 40px;
+  min-height: 36px;
   border: 2px solid var(--ink);
   border-radius: 8px;
   background: var(--paper);
@@ -547,6 +549,37 @@ h1 {
 .tool-button:focus-visible {
   outline: 3px solid rgba(159, 47, 47, 0.28);
   outline-offset: 2px;
+}
+
+@media (max-height: 760px) and (min-width: 781px) {
+  .page {
+    padding-top: 14px;
+    padding-bottom: 16px;
+  }
+
+  #draw {
+    padding-top: 10px;
+  }
+
+  .draw-header h1 {
+    font-size: 2.25rem;
+  }
+
+  .draw-header p:not(.eyebrow) {
+    margin-top: 6px;
+  }
+
+  .eyebrow {
+    margin-bottom: 6px;
+  }
+
+  .studio-layout {
+    height: clamp(340px, calc(100dvh - 205px), 500px);
+  }
+
+  .president-grid {
+    max-height: 145px;
+  }
 }
 
 @media (max-width: 780px) {
@@ -590,12 +623,11 @@ h1 {
 
   .studio-board {
     height: auto;
-    min-height: min(500px, 72dvh);
+    min-height: min(430px, 68dvh);
   }
 
   .paper {
-    width: min(88%, 360px);
-    height: auto;
+    width: min(88%, 340px);
   }
 
   .president-grid {

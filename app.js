@@ -105,7 +105,13 @@ function activateTab(tabName) {
     window.history.replaceState(null, "", `#${tabName}`);
   }
 
+  scrollToPageTop();
+}
+
+function scrollToPageTop() {
   window.scrollTo({ top: 0, behavior: "auto" });
+  requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "auto" }));
+  setTimeout(() => window.scrollTo({ top: 0, behavior: "auto" }), 80);
 }
 
 function setupCards() {
@@ -473,7 +479,7 @@ function prepareStrokes(strokes) {
 
       return { ...stroke, pixelLength };
     })
-    .filter((stroke) => stroke.pixelLength > 0.002 && !isTextureStroke(stroke));
+    .filter((stroke) => stroke.pixelLength > 0.002);
 
   prepared.sort((a, b) => {
     const orderDelta = (a.order ?? inferredStrokeOrder(a)) - (b.order ?? inferredStrokeOrder(b));
@@ -484,15 +490,6 @@ function prepareStrokes(strokes) {
   });
 
   return prepared;
-}
-
-function isTextureStroke(stroke) {
-  const area = stroke.w * stroke.h;
-  if (stroke.region === "features") {
-    return stroke.pixelLength < 0.055 && area < 0.00035;
-  }
-
-  return stroke.pixelLength < 0.022 && area < 0.00007;
 }
 
 function inferredStrokeOrder(stroke) {
